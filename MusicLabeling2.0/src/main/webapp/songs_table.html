@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Song Labeling</title>
+    <link rel="shortcut icon"
+          href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="scripts/utils.js" charset="utf-8" defer></script>
+    <script src="scripts/songsTable.js" charset="utf-8" defer></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link rel="stylesheet" type="text/css" media="all"
+          href="css/index.css"/>
+
+</head>
+<body>
+<div class="top">
+    <div class="img-container">
+        <img class="logo" src="images/lwt3_logo.png" alt="Couldn't Load Logo">
+    </div>
+    <button id="export-button" class="button-link">Export labels</button>
+    <button id="delete-song-button" class="button-link">Delete song</button>
+    <button id="logout-button" class="button-link">Log out</button>
+    <div id="upload-song-link">
+        <a href="upload_song.html"><b>Upload Song</b></a>
+    </div>
+</div>
+<h2>Songs List</h2>
+
+<div class="container-of-all">
+<div class="table-container">
+<table id="songs-table" class="songs-table">
+    <tr>
+        <th class="song-table">ID</th>
+        <th class="song-table">Name</th>
+        <th class="song-table">Artist</th>
+        <th class="song-table">Labeled</th>
+    </tr>
+    <!-- Songs will be populated here by JavaScript -->
+</table>
+</div>
+<div id="song-details">
+    <div class="song-details-sub-container">
+        <h1 id="song-name" class="song-details">Song Name Goes Here</h1>
+        <h2 id="song-artist" class="song-details">Song Artist Goes Here</h2>
+        <div class="song-labels">
+            <div id="submit-labels" class="submit-labels">
+                <div class="custom-select">
+                    <select id="song-labels-selector" class="song-labels">
+                    </select>
+                </div>
+                <button id="submit-label-button" class="song-labels">Add Label</button>
+            </div>
+            <table id="song-labels-table" class="song-labels">
+
+            </table>
+        </div>
+    </div>
+
+</div>
+</div>
+<p id="alert-container">
+
+</p>
+<div id="audiowrap" class="animated-gradient">
+    <div id="audio0">
+        <audio id="audio1" preload controls>Your browser does not support HTML5 Audio!</audio>
+    </div>
+</div>
+<div class="background">
+
+</div>
+</body>
+</html>

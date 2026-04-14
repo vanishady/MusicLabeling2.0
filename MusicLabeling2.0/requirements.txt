@@ -1,0 +1,2 @@
+MySQL
+JDK 11 (set JAVA_HOME in JDK path)

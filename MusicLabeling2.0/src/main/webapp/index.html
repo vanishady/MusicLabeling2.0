@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Login Page</title>
+    <link rel="shortcut icon"
+          href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="scripts/utils.js" charset="utf-8" defer></script>
+    <script src="scripts/loginManagement.js" charset="utf-8" defer></script>
+    <link rel="stylesheet" type="text/css" media="all"
+          href="css/index.css"/>
+
+</head>
+<body>
+<div class="top">
+    <div class="img-container">
+        <img class="logo" src="images/lwt3_logo.png" alt="Couldn't Load Logo">
+    </div>
+</div>
+<div class="center-absolute">
+    <form class="index" action="#">
+        <div class="imgcontainer-index">
+            <img src="images/lwt3_piano_logo.png" alt="Avatar" class="avatar-index">
+        </div>
+        <div class="index-description">
+            <p class="index-description">PIANO EMOTION RECOGNITION EXPERIMENT</p>
+        </div>
+        <div class="container-index">
+            <fieldset class="index">
+                <p><input class="index" type="text" placeholder="Enter Username" name="username" required></p>
+                <p><input type="password" placeholder="Enter Password" name="password" required></p>
+                <p><button class="index" id="loginbutton" type="submit" value="login"><b>LOGIN</b></button></p>
+                <p id="errormessage"></p>
+            </fieldset>
+        </div>
+    </form>
+</div>
+</body>
+</html>

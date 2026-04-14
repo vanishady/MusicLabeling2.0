@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+         version="5.0">
+    <display-name>music_labeling</display-name>
+    <context-param>
+        <param-name>dbUrl</param-name>
+        <param-value>jdbc:mysql://localhost:3306/musicLabelling?serverTimezone=UTC</param-value>
+<!--        <param-value>jdbc:mysql://musiclabelling-server.mysql.database.azure.com:3306/musicLabelling?serverTimezone=UTC</param-value>-->
+    </context-param>
+    <context-param>
+        <param-name>dbUser</param-name>
+        <param-value>root</param-value>
+<!--        <param-value>pkougotrrq</param-value>-->
+    </context-param>
+    <context-param>
+        <param-name>dbPassword</param-name>
+        <param-value>Tony&amp;p1t0ny</param-value>
+<!--        <param-value>uX2nm1FjY7$pPHKq</param-value>-->
+    </context-param>
+    <context-param>
+        <param-name>dbDriver</param-name>
+        <param-value>com.mysql.cj.jdbc.Driver</param-value>
+    </context-param>
+    <filter>
+        <filter-name>LoginChecker</filter-name>
+        <filter-class>it.polimi.mae.musiclabeling.filters.LoginChecker</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>LoginChecker</filter-name>
+        <url-pattern>/GetAllSongs</url-pattern>
+        <url-pattern>/GetAllUsers</url-pattern>
+        <url-pattern>/GetSongInfo</url-pattern>
+        <url-pattern>/GetSongLabels</url-pattern>
+        <url-pattern>/GetSongWav</url-pattern>
+        <url-pattern>/AddLabelToSong</url-pattern>
+        <url-pattern>/DeleteSongLabel</url-pattern>
+        <url-pattern>/UploadSong</url-pattern>
+        <url-pattern>/DeleteSong</url-pattern>
+        <url-pattern>/songs_table.html</url-pattern>
+    </filter-mapping>
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+</web-app>
