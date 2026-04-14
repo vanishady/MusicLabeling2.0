@@ -58,5 +58,5 @@ INSERT INTO labels (label_name) VALUES ('Relaxed/Serene');
 INSERT INTO labels (label_name) VALUES ('Tired/Calm');
 INSERT INTO labels (label_name) VALUES ('Depressed/Bored');
 INSERT INTO labels (label_name) VALUES ('Miserable/Sad');
-INSERT INTO labels (label_name) VALUES ('Andry/Annoyed');
+INSERT INTO labels (label_name) VALUES ('Angry/Annoyed');
 INSERT INTO labels (label_name) VALUES ('Alarmed/Aroused');
