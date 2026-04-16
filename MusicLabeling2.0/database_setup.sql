@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS user_song_labels (
   song_id INT NOT NULL,
   label_id INT NOT NULL,
   timing INT NOT NULL,
+  valence FLOAT DEFAULT 0.5,
+  arousal FLOAT DEFAULT 0.5,
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE,
   FOREIGN KEY (label_id) REFERENCES labels(label_id) ON DELETE CASCADE

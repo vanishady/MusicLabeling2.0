@@ -6,6 +6,8 @@ public class Label implements Serializable {
     private String labelName;
     private int labelTiming;
     private int userSongLabelId;
+    private float valence = 0.5f;
+    private float arousal = 0.5f;
 
     public Label() {
     }
@@ -35,4 +37,8 @@ public class Label implements Serializable {
     public void setLabelTiming(int timing) { this.labelTiming = timing; }
     public int getUserSongLabelId() { return userSongLabelId; }
     public void setUserSongLabelId(int userSongLabelId) { this.userSongLabelId = userSongLabelId; }
+    public float getValence() { return valence; }
+    public void setValence(float valence) { this.valence = valence; }
+    public float getArousal() { return arousal; }
+    public void setArousal(float arousal) { this.arousal = arousal; }
 }

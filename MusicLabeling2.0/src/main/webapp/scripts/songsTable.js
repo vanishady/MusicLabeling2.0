@@ -221,6 +221,22 @@
         this.currentSongId = 1
         this.labels = []
 
+        const SEGMENT_COLORS = {
+            'angry/annoyed':     '#e06666',
+            'alarmed/aroused':   '#cf0f0f',
+            'delighted/excited': '#ffb262',
+            'happy/pleased':     '#ffd966',
+            'relaxed/serene':    '#3cc4d8',
+            'tired/calm':        '#6fa8dc',
+            'depressed/bored':   '#93c47d',
+            'miserable/sad':     '#0b5394'
+        }
+        const SEGMENT_COLOR_FALLBACKS = ['#aaaaaa', '#bbbbbb', '#cccccc', '#999999']
+        function segmentColor(labelName, idx) {
+            const key = labelName.toLowerCase()
+            return SEGMENT_COLORS[key] || SEGMENT_COLOR_FALLBACKS[idx % SEGMENT_COLOR_FALLBACKS.length]
+        }
+
         this.setCurrentSongId = async function(songId) {
             this.currentSongId = songId
             const songLabels = await fetchData(`GetSongLabels?song_id=${encodeURIComponent(this.currentSongId)}`, this.alert)
@@ -243,6 +259,105 @@
             })
         }
 
+        this.renderTimeline = function(songLabels) {
+            const timeline = document.getElementById('label-timeline')
+            timeline.innerHTML = ''
+
+            if (!songLabels || songLabels.length === 0) return
+
+            const duration = this.audioPlayer.duration
+            if (!duration || duration <= 0 || isNaN(duration)) return
+
+            const durationMs = duration * 1000
+
+            for (let i = 0; i < songLabels.length; i++) {
+                const startMs = songLabels[i].labelTiming
+                const endMs = (i < songLabels.length - 1) ? songLabels[i + 1].labelTiming : durationMs
+
+                const leftPct = startMs / durationMs * 100
+                const widthPct = (endMs - startMs) / durationMs * 100
+
+                const seg = document.createElement('div')
+                seg.classList.add('label-segment')
+                seg.style.left = leftPct + '%'
+                seg.style.width = widthPct + '%'
+                seg.style.backgroundColor = segmentColor(songLabels[i].labelName, i)
+                seg.title = songLabels[i].labelName
+                timeline.appendChild(seg)
+
+                // Draw shared handle at the start of each label except the first
+                if (i > 0) {
+                    const handle = document.createElement('div')
+                    handle.classList.add('label-handle')
+                    handle.style.left = leftPct + '%'
+                    handle.dataset.labelId = songLabels[i].userSongLabelId
+                    handle.dataset.minMs = songLabels[i - 1].labelTiming + 500
+                    handle.dataset.maxMs = (i + 1 < songLabels.length)
+                        ? songLabels[i + 1].labelTiming - 500
+                        : durationMs - 500
+
+                    this._attachHandleDrag(handle, timeline, durationMs, i, songLabels)
+                    timeline.appendChild(handle)
+                }
+            }
+        }
+
+        this._attachHandleDrag = function(handle, timeline, durationMs, labelIdx, songLabels) {
+            let self = this
+            let dragging = false
+            let startX = 0
+            let startLeftPct = 0
+
+            handle.addEventListener('pointerdown', (e) => {
+                dragging = true
+                startX = e.clientX
+                startLeftPct = parseFloat(handle.style.left)
+                handle.setPointerCapture(e.pointerId)
+                e.preventDefault()
+            })
+
+            handle.addEventListener('pointermove', (e) => {
+                if (!dragging) return
+                const rect = timeline.getBoundingClientRect()
+                const deltaPct = (e.clientX - startX) / rect.width * 100
+                const newLeftPct = Math.max(
+                    parseFloat(handle.dataset.minMs) / durationMs * 100,
+                    Math.min(
+                        parseFloat(handle.dataset.maxMs) / durationMs * 100,
+                        startLeftPct + deltaPct
+                    )
+                )
+                handle.style.left = newLeftPct + '%'
+
+                // Update visuals of the two adjacent segments in real time
+                const segments = timeline.querySelectorAll('.label-segment')
+                const prevSeg = segments[labelIdx - 1]
+                const currSeg = segments[labelIdx]
+                if (prevSeg) {
+                    const prevLeft = parseFloat(prevSeg.style.left)
+                    prevSeg.style.width = (newLeftPct - prevLeft) + '%'
+                }
+                if (currSeg) {
+                    const currRight = parseFloat(currSeg.style.left) + parseFloat(currSeg.style.width)
+                    currSeg.style.left = newLeftPct + '%'
+                    currSeg.style.width = (currRight - newLeftPct) + '%'
+                }
+            })
+
+            handle.addEventListener('pointerup', async (e) => {
+                if (!dragging) return
+                dragging = false
+
+                const newTimingMs = Math.round(parseFloat(handle.style.left) / 100 * durationMs)
+                await postData(
+                    `UpdateLabelTiming?user_song_label_id=${encodeURIComponent(handle.dataset.labelId)}&new_timing_ms=${encodeURIComponent(newTimingMs)}`,
+                    self.alert
+                )
+                const songLabels = await fetchData(`GetSongLabels?song_id=${encodeURIComponent(self.currentSongId)}`, self.alert)
+                self.update(songLabels)
+            })
+        }
+
         this.update = function(songLabels) {
             let self = this;
             this.songLabelsTable.innerHTML = ''
@@ -255,6 +370,7 @@
                 headCell.textContent = 'This song has no labels yet'.toUpperCase();
                 headRow.appendChild(headCell)
                 this.songLabelsTable.appendChild(headRow)
+                this.renderTimeline(songLabels)
                 return
             }
             const headers = ['Label', 'Time of Start', 'Time of End', 'Delete Label']
@@ -272,6 +388,7 @@
 
                 let nameCell = document.createElement('td')
                 nameCell.classList.add('song-labels')
+                nameCell.classList.add('label-name-cell')
                 nameCell.textContent = songLabels[i].labelName
                 row.appendChild(nameCell)
 
@@ -282,7 +399,7 @@
 
                 let endTimingCell = document.createElement('td')
                 endTimingCell.classList.add('song-labels')
-                endTimingCell.textContent = i === songLabels.length-1 ? 'end' : (songLabels[i+1].labelTiming / 1000.0).toFixed(2) + 's'
+                endTimingCell.textContent = i === songLabels.length - 1 ? 'end' : (songLabels[i + 1].labelTiming / 1000.0).toFixed(2) + 's'
                 row.appendChild(endTimingCell)
 
                 let deleteLabelCell = document.createElement('td');
@@ -292,14 +409,77 @@
                 deleteLabelCell.innerHTML = "<b>DELETE</b>";
                 row.append(deleteLabelCell);
 
-                (function(userSongLabelId) {
-                    deleteLabelCell.addEventListener("click", () => {
-                        self.deleteSongLabel(userSongLabelId);
-                    }, false);
-                })(songLabels[i].userSongLabelId);
-
                 this.songLabelsTable.appendChild(row)
+
+                // VA row (hidden by default, toggled on nameCell click)
+                let vaRow = document.createElement('tr')
+                vaRow.classList.add('va-row')
+                vaRow.style.display = 'none'
+                let vaCell = document.createElement('td')
+                vaCell.colSpan = 4
+                vaCell.classList.add('va-cell')
+
+                const initValence = Math.round((songLabels[i].valence || 0.5) * 100)
+                const initArousal = Math.round((songLabels[i].arousal || 0.5) * 100)
+
+                vaCell.innerHTML = `
+                    <div class="va-slider-container">
+                        <label class="va-label">Valence: <span class="va-val-display">${(initValence / 100).toFixed(2)}</span>
+                            <input type="range" class="va-slider" min="0" max="100" value="${initValence}" data-type="valence">
+                        </label>
+                        <label class="va-label">Arousal: <span class="va-aro-display">${(initArousal / 100).toFixed(2)}</span>
+                            <input type="range" class="va-slider" min="0" max="100" value="${initArousal}" data-type="arousal">
+                        </label>
+                    </div>`
+                vaRow.appendChild(vaCell)
+                this.songLabelsTable.appendChild(vaRow)
+
+                // Wire up events inside IIFE to capture correct scope
+                ;(function(row, vaRow, vaCell, labelData) {
+                    let vaDebounce = null
+                    let currentValence = labelData.valence || 0.5
+                    let currentArousal = labelData.arousal || 0.5
+
+                    nameCell.addEventListener('click', () => {
+                        vaRow.style.display = vaRow.style.display === 'none' ? '' : 'none'
+                    })
+
+                    deleteLabelCell.addEventListener('click', () => {
+                        self.deleteSongLabel(labelData.userSongLabelId)
+                    }, false)
+
+                    const valenceSlider = vaCell.querySelector('input[data-type="valence"]')
+                    const arousalSlider = vaCell.querySelector('input[data-type="arousal"]')
+                    const valDisplay = vaCell.querySelector('.va-val-display')
+                    const aroDisplay = vaCell.querySelector('.va-aro-display')
+
+                    valenceSlider.addEventListener('input', () => {
+                        currentValence = valenceSlider.value / 100
+                        valDisplay.textContent = currentValence.toFixed(2)
+                        clearTimeout(vaDebounce)
+                        vaDebounce = setTimeout(() => {
+                            postData(
+                                `UpdateLabelValenceArousal?user_song_label_id=${encodeURIComponent(labelData.userSongLabelId)}&valence=${encodeURIComponent(currentValence)}&arousal=${encodeURIComponent(currentArousal)}`,
+                                self.alert
+                            )
+                        }, 500)
+                    })
+
+                    arousalSlider.addEventListener('input', () => {
+                        currentArousal = arousalSlider.value / 100
+                        aroDisplay.textContent = currentArousal.toFixed(2)
+                        clearTimeout(vaDebounce)
+                        vaDebounce = setTimeout(() => {
+                            postData(
+                                `UpdateLabelValenceArousal?user_song_label_id=${encodeURIComponent(labelData.userSongLabelId)}&valence=${encodeURIComponent(currentValence)}&arousal=${encodeURIComponent(currentArousal)}`,
+                                self.alert
+                            )
+                        }, 500)
+                    })
+                })(row, vaRow, vaCell, songLabels[i])
             }
+
+            this.renderTimeline(songLabels)
         }
 
         this.uploadNewSongLabel = async function() {
@@ -374,6 +554,11 @@
 
             audioPlayer.on('ended', () => {
                 songListHandler.onEndEvent();
+            })
+
+            audioPlayer.on('ready', () => {
+                // Re-render timeline once duration is known after loading a new song
+                songLabelsHandler.setCurrentSongId(songLabelsHandler.currentSongId)
             })
 
             songLabelsHandler.init()

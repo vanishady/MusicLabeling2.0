@@ -76,7 +76,7 @@ public class LabelsDAOImpl implements LabelsDAO {
 
     @Override
     public List<Label> getLabelsFromUserAndSong(int userId, int songId) throws SQLException {
-        String sql = "SELECT * FROM labels l JOIN user_song_labels usl ON l.label_id = usl.label_id WHERE usl.user_id = ? AND usl.song_id = ?";
+        String sql = "SELECT * FROM labels l JOIN user_song_labels usl ON l.label_id = usl.label_id WHERE usl.user_id = ? AND usl.song_id = ? ORDER BY usl.timing ASC";
         List<Label> labels = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userId);
@@ -88,6 +88,8 @@ public class LabelsDAOImpl implements LabelsDAO {
                     label.setLabelName(result.getString("label_name"));
                     label.setLabelTiming(result.getInt("timing"));
                     label.setUserSongLabelId(result.getInt("user_song_label_id"));
+                    label.setValence(result.getFloat("valence"));
+                    label.setArousal(result.getFloat("arousal"));
                     labels.add(label);
                 }
             }
@@ -97,7 +99,7 @@ public class LabelsDAOImpl implements LabelsDAO {
 
     @Override
     public List<Label> getLabelsForSong(int songId) throws SQLException {
-        String sql = "SELECT * FROM labels l JOIN user_song_labels usl ON l.label_id = usl.label_id WHERE usl.song_id = ?";
+        String sql = "SELECT * FROM labels l JOIN user_song_labels usl ON l.label_id = usl.label_id WHERE usl.song_id = ? ORDER BY usl.timing ASC";
         List<Label> labels = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, songId);
@@ -108,6 +110,8 @@ public class LabelsDAOImpl implements LabelsDAO {
                     label.setLabelName(result.getString("label_name"));
                     label.setLabelTiming(result.getInt("timing"));
                     label.setUserSongLabelId(result.getInt("user_song_label_id"));
+                    label.setValence(result.getFloat("valence"));
+                    label.setArousal(result.getFloat("arousal"));
                     labels.add(label);
                 }
             }
@@ -116,8 +120,42 @@ public class LabelsDAOImpl implements LabelsDAO {
     }
 
     @Override
+    public int getSongIdForLabel(int userSongLabelId) throws SQLException {
+        String sql = "SELECT song_id FROM user_song_labels WHERE user_song_label_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userSongLabelId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return result.getInt("song_id");
+                }
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public void updateLabelTiming(int userSongLabelId, int newTimingMs) throws SQLException {        String sql = "UPDATE user_song_labels SET timing = ? WHERE user_song_label_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, newTimingMs);
+            statement.setInt(2, userSongLabelId);
+            statement.executeUpdate();
+        }
+    }
+
+    @Override
+    public void updateLabelValenceArousal(int userSongLabelId, float valence, float arousal) throws SQLException {
+        String sql = "UPDATE user_song_labels SET valence = ?, arousal = ? WHERE user_song_label_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setFloat(1, valence);
+            statement.setFloat(2, arousal);
+            statement.setInt(3, userSongLabelId);
+            statement.executeUpdate();
+        }
+    }
+
+    @Override
     public JsonObject exportLabelsToFile() throws SQLException {
-        String sqlQuery = "SELECT u.username, s.song_id, s.song_name, s.file_path, l.label_name, usl.timing " +
+        String sqlQuery = "SELECT u.username, s.song_id, s.song_name, s.file_path, l.label_name, usl.timing, usl.valence, usl.arousal " +
                 "FROM user_song_labels usl " +
                 "JOIN songs s ON usl.song_id = s.song_id " +
                 "JOIN users u ON usl.user_id = u.user_id " +
@@ -151,6 +189,8 @@ public class LabelsDAOImpl implements LabelsDAO {
                 String filePath = resultSet.getString("file_path");
                 String labelName = resultSet.getString("label_name");
                 int timing = resultSet.getInt("timing");
+                float valence = resultSet.getFloat("valence");
+                float arousal = resultSet.getFloat("arousal");
 
                 if (!userName.equals(currentUser)) {
                     // New user
@@ -180,6 +220,8 @@ public class LabelsDAOImpl implements LabelsDAO {
 
                 JsonObject labelObj = new JsonObject();
                 labelObj.addProperty("label", labelName);
+                labelObj.addProperty("valence", valence);
+                labelObj.addProperty("arousal", arousal);
                 labelObj.addProperty("timing", timing);
                 labelsArray.add(labelObj);
             }

@@ -18,5 +18,8 @@ public interface LabelsDAO {
     boolean userCanDeleteSong(int userSongLabelId, int userId) throws SQLException;
     void addLabelsToSong(int userId, int songId, List<Integer> labelIds, List<Integer> timings) throws SQLException;
     boolean labelCanBeAdded(int userId, int songId, int labelTiming) throws SQLException;
+    void updateLabelTiming(int userSongLabelId, int newTimingMs) throws SQLException;
+    void updateLabelValenceArousal(int userSongLabelId, float valence, float arousal) throws SQLException;
+    int getSongIdForLabel(int userSongLabelId) throws SQLException;
     JsonObject exportLabelsToFile() throws SQLException;
 }
