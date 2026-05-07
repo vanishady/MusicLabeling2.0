@@ -285,20 +285,18 @@
                 seg.title = songLabels[i].labelName
                 timeline.appendChild(seg)
 
-                // Draw shared handle at the start of each label except the first
-                if (i > 0) {
-                    const handle = document.createElement('div')
-                    handle.classList.add('label-handle')
-                    handle.style.left = leftPct + '%'
-                    handle.dataset.labelId = songLabels[i].userSongLabelId
-                    handle.dataset.minMs = songLabels[i - 1].labelTiming + 500
-                    handle.dataset.maxMs = (i + 1 < songLabels.length)
-                        ? songLabels[i + 1].labelTiming - 500
-                        : durationMs - 500
+                // Draw handle at the start of each label
+                const handle = document.createElement('div')
+                handle.classList.add('label-handle')
+                handle.style.left = leftPct + '%'
+                handle.dataset.labelId = songLabels[i].userSongLabelId
+                handle.dataset.minMs = i === 0 ? 0 : songLabels[i - 1].labelTiming + 500
+                handle.dataset.maxMs = (i + 1 < songLabels.length)
+                    ? songLabels[i + 1].labelTiming - 500
+                    : durationMs - 500
 
-                    this._attachHandleDrag(handle, timeline, durationMs, i, songLabels)
-                    timeline.appendChild(handle)
-                }
+                this._attachHandleDrag(handle, timeline, durationMs, i, songLabels)
+                timeline.appendChild(handle)
             }
         }
 

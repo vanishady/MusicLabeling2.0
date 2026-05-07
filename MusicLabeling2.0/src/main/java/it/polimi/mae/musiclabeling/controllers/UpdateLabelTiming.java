@@ -87,14 +87,7 @@ public class UpdateLabelTiming extends HttpServlet {
                 return;
             }
 
-            // The first label cannot be moved (it defines the absolute start of labeling)
-            if (pos == 0) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().println("Cannot move the timing of the first label.");
-                return;
-            }
-
-            int minTiming = labels.get(pos - 1).getLabelTiming() + constants.getMinTimeBetweenLabels();
+            int minTiming = pos == 0 ? 0 : labels.get(pos - 1).getLabelTiming() + constants.getMinTimeBetweenLabels();
             int maxTiming = (pos + 1 < labels.size())
                     ? labels.get(pos + 1).getLabelTiming() - constants.getMinTimeBetweenLabels()
                     : Integer.MAX_VALUE;

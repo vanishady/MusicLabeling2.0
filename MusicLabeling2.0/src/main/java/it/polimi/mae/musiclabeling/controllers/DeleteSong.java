@@ -66,6 +66,12 @@ public class DeleteSong extends HttpServlet {
             return;
         }
 
+        if (song == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().println("Song not found.");
+            return;
+        }
+
         // Construct the file path
         String fileName = song.getFilePath();
         String filePath = System.getenv("AUDIO_STORAGE_PATH") + File.separator + fileName;
@@ -85,6 +91,7 @@ public class DeleteSong extends HttpServlet {
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("File not found.");
+            return;
         }
 
         //Delete song information from database
