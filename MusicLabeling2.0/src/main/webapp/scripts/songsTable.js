@@ -554,8 +554,22 @@
                 songListHandler.onEndEvent();
             })
 
+            function alignTimeline() {
+                const audioWrap = document.getElementById('audiowrap')
+                const progressEl = audioWrap ? audioWrap.querySelector('.plyr__progress') : null
+                const timeline = document.getElementById('label-timeline')
+                if (!progressEl || !timeline) return
+                const wrapRect = audioWrap.getBoundingClientRect()
+                const progRect = progressEl.getBoundingClientRect()
+                timeline.style.marginLeft = (progRect.left - wrapRect.left) + 'px'
+                timeline.style.width = progRect.width + 'px'
+            }
+
+            window.addEventListener('resize', alignTimeline)
+
             audioPlayer.on('ready', () => {
                 // Re-render timeline once duration is known after loading a new song
+                alignTimeline()
                 songLabelsHandler.setCurrentSongId(songLabelsHandler.currentSongId)
             })
 

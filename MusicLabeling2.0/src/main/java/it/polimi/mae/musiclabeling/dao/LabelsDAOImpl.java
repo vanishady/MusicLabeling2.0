@@ -243,7 +243,7 @@ public class LabelsDAOImpl implements LabelsDAO {
 
     @Override
     public void deleteSongLabel(int userSongLabelId) throws SQLException {
-        String sql = "DELETE user_song_labels FROM user_song_labels JOIN (SELECT timing FROM user_song_labels WHERE user_song_label_id = (?)) AS temp ON user_song_labels.timing >= temp.timing";
+        String sql = "DELETE user_song_labels FROM user_song_labels JOIN (SELECT timing, song_id, user_id FROM user_song_labels WHERE user_song_label_id = (?)) AS temp ON user_song_labels.timing >= temp.timing AND user_song_labels.song_id = temp.song_id AND user_song_labels.user_id = temp.user_id";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userSongLabelId);
             statement.executeUpdate();
