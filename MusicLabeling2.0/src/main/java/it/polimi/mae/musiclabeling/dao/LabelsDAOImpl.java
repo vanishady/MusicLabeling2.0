@@ -155,12 +155,12 @@ public class LabelsDAOImpl implements LabelsDAO {
 
     @Override
     public JsonObject exportLabelsToFile() throws SQLException {
-        String sqlQuery = "SELECT u.username, s.song_id, s.song_name, s.file_path, l.label_name, usl.timing, usl.valence, usl.arousal " +
+        String sqlQuery = "SELECT u.username, s.song_id, s.song_name, s.artist, s.file_path, l.label_name, usl.timing, usl.valence, usl.arousal " +
                 "FROM user_song_labels usl " +
                 "JOIN songs s ON usl.song_id = s.song_id " +
                 "JOIN users u ON usl.user_id = u.user_id " +
                 "JOIN labels l ON usl.label_id = l.label_id " +
-                "ORDER BY u.username, s.song_id, usl.timing";
+                "ORDER BY s.artist, u.username, s.song_id, usl.timing";
 
         JsonObject root = null;
 
@@ -177,12 +177,14 @@ public class LabelsDAOImpl implements LabelsDAO {
 
             JsonArray labelsArray = null;
 
+            String currentArtist = "";
             String currentUser = "";
             String currentSongId = "";
 
             // Iterate over the result set to create the JSON structure
             while (resultSet.next()) {
-                // Get the user, song name, path, and label with timing
+                // Get the artist, user, song name, path, and label with timing
+                String artistName = resultSet.getString("artist");
                 String userName = resultSet.getString("username");
                 String songName = resultSet.getString("song_name");
                 String songId = resultSet.getString("song_id");
@@ -192,10 +194,13 @@ public class LabelsDAOImpl implements LabelsDAO {
                 float valence = resultSet.getFloat("valence");
                 float arousal = resultSet.getFloat("arousal");
 
-                if (!userName.equals(currentUser)) {
-                    // New user
+                if (!artistName.equals(currentArtist) || !userName.equals(currentUser)) {
+                    // New artist+user group
+                    currentArtist = artistName;
                     currentUser = userName;
+                    currentSongId = "";
                     currentUserObj = new JsonObject();
+                    currentUserObj.addProperty("artistName", artistName);
                     currentUserObj.addProperty("userName", userName);
 
                     songsArray = new JsonArray();
