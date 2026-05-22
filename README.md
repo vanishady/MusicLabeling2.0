@@ -129,10 +129,15 @@ INSERT INTO users (username, password, is_admin) VALUES ('nomeutente', '$2a$10$.
 ```
 
 ### Re-deploy dopo le modifiche al codice
+Elimina cartella e .war da `C:\tomcat\webapps\MusicLabeling-1.0-SNAPSHOT\`  
+Elimina cartella e .war da `.MusicLabelling2.0\target\MusicLabeling-1.0-SNAPSHOT\`  
+
 ```powershell
 .\mvnw.cmd package -q
 ```
 Poi: ferma Tomcat → elimina `C:\tomcat\webapps\MusicLabeling-1.0-SNAPSHOT\` → copia il nuovo WAR → riavvia Tomcat.
+
+> **Nota:** Ricorda di fare `CTRL+SHIFT+R` sul browser per refresh forzato.
 
 ---
 

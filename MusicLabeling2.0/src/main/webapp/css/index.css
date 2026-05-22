@@ -220,8 +220,7 @@ fieldset {
     width: 70%; /* Left half of the screen */
     position: fixed;
     overflow-y: auto; /* Enable vertical scrolling */
-    height: 100%; /* Full height */
-    bottom: 0;
+    bottom: 92px; /* Leave room for the fixed audio/timeline bar */
     left: 0;
     padding: 20px;
 }
