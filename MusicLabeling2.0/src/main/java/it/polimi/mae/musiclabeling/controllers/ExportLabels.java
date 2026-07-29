@@ -11,13 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,24 +63,14 @@ public class ExportLabels extends HttpServlet {
 
         // Define the format for the date string in the filename
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
-
-        // Format the current date using the specified format
         String dateString = dateFormat.format(new Date());
+        String fileName = dateString + ".json";
 
-        String extension = ".json";
-        String fileName = dateString + extension;
-
-        String filePath = System.getenv("AUDIO_STORAGE_PATH") + File.separator + fileName;
-
-        // Write the string to a file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write(jsonString);
-        } catch (IOException e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().println("Can't write labels to file: " + e.getMessage());
-            return;
-        }
+        // Send the JSON directly as a file download
+        response.setContentType("application/json");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().write(jsonString);
     }
 
     public void destroy() {

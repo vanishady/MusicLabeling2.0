@@ -74,7 +74,7 @@ public class UploadSong extends HttpServlet {
 
         // Save the file
         try {
-            songFilePart.write(savePath + File.separator);
+            songFilePart.write(savePath);
         } catch (IOException e) {
             File file = new File(savePath);
             if (file.exists()) {
