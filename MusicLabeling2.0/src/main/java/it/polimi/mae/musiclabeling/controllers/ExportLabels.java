@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -71,7 +72,7 @@ public class ExportLabels extends HttpServlet {
         // Save the JSON file to the configured storage path
         try {
             String storagePath = System.getenv("AUDIO_STORAGE_PATH") + java.io.File.separator + fileName;
-            Files.write(Paths.get(storagePath), jsonString.getBytes());
+            Files.write(Paths.get(storagePath), jsonString.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error saving file to storage: " + e.getMessage());
@@ -81,8 +82,12 @@ public class ExportLabels extends HttpServlet {
         // Send the JSON as a file download to the browser
         response.setContentType("application/json");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        response.setCharacterEncoding("UTF-8");
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+        response.setContentLength(jsonBytes.length);
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(jsonString);
+        response.getOutputStream().write(jsonBytes);
+        response.getOutputStream().flush();
     }
 
     public void destroy() {
