@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -66,7 +68,17 @@ public class ExportLabels extends HttpServlet {
         String dateString = dateFormat.format(new Date());
         String fileName = dateString + ".json";
 
-        // Send the JSON directly as a file download
+        // Save the JSON file to the configured storage path
+        try {
+            String storagePath = System.getenv("AUDIO_STORAGE_PATH") + java.io.File.separator + fileName;
+            Files.write(Paths.get(storagePath), jsonString.getBytes());
+        } catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().println("Error saving file to storage: " + e.getMessage());
+            return;
+        }
+
+        // Send the JSON as a file download to the browser
         response.setContentType("application/json");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         response.setStatus(HttpServletResponse.SC_OK);
