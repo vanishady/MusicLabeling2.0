@@ -24,20 +24,16 @@ import java.util.List;
 @WebServlet("/GetAllSongs")
 public class GetAllSongs extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         List<Song> songs;
 
-        SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
-        LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
+            LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
             if (user.isAdmin())
             {
                 songs = songsDAO.getAllSongs(false);
@@ -60,6 +56,8 @@ public class GetAllSongs extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while retrieving songs from database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         if (songs.isEmpty()) {

@@ -26,11 +26,6 @@ import java.util.stream.Collectors;
 @WebServlet("/DeleteSongLabel")
 public class DeleteSongLabel extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int userSongLabelId;
@@ -52,9 +47,9 @@ public class DeleteSongLabel extends HttpServlet {
 
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
-        LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
-
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
             if (!labelsDAO.userCanDeleteSong(userSongLabelId, user.getUserId())) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().println("This user cannot delete the selected label.");
@@ -66,16 +61,10 @@ public class DeleteSongLabel extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while handling database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    public void destroy() {
-        try {
-            ConnectionHandler.closeConnection(connection);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }

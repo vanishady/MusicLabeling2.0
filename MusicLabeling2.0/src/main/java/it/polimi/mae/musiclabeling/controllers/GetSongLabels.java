@@ -25,11 +25,6 @@ import java.util.List;
 @WebServlet("/GetSongLabels")
 public class GetSongLabels extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int songId;
@@ -46,8 +41,9 @@ public class GetSongLabels extends HttpServlet {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
 
-        LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
             if (!user.isAdmin()){
                 labels = labelsDAO.getLabelsFromUserAndSong(user.getUserId(), songId);
             }
@@ -58,6 +54,8 @@ public class GetSongLabels extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while retrieving labels from database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         if (labels == null) {

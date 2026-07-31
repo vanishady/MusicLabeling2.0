@@ -28,9 +28,13 @@ public class ConnectionHandler {
         return connection;
     }
 
-    public static void closeConnection(Connection connection) throws SQLException {
+    public static void closeConnection(Connection connection) {
         if (connection != null) {
-            connection.close();
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

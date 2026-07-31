@@ -22,15 +22,10 @@ import java.sql.SQLException;
 @MultipartConfig
 public class CheckLogin extends HttpServlet {
     private static final long serialVersionUID =1L;
-    private Connection connection;
     private final ProjectConstants constants = ProjectConstants.getProjectConstants();
 
     public CheckLogin() {
         super();
-    }
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -57,37 +52,42 @@ public class CheckLogin extends HttpServlet {
             return;
         }
 
-        UsersDAOImpl usersDAO = new UsersDAOImpl(connection);
-        User user;
+        Connection connection;
         try {
-            user = usersDAO.checkCredentials(username, password);
-        } catch (SQLException e) {
+            connection = ConnectionHandler.getConnection(getServletContext());
+        } catch (ServletException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().println("Impossible to check user credentials.");
+            response.getWriter().println("Database connection failed.");
             return;
         }
 
-        if (user == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().println("Incorrect username or password.");
-            return;
-        }
-
-        Gson gson = new GsonBuilder().setDateFormat("yyyy MM dd").create();
-        String json = gson.toJson(user);
-
-        request.getSession().setAttribute("user", user);
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(json);
-    }
-
-    public void destroy() {
         try {
+            UsersDAOImpl usersDAO = new UsersDAOImpl(connection);
+            User user;
+            try {
+                user = usersDAO.checkCredentials(username, password);
+            } catch (SQLException e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().println("Impossible to check user credentials.");
+                return;
+            }
+
+            if (user == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().println("Incorrect username or password.");
+                return;
+            }
+
+            Gson gson = new GsonBuilder().setDateFormat("yyyy MM dd").create();
+            String json = gson.toJson(user);
+
+            request.getSession().setAttribute("user", user);
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(json);
+        } finally {
             ConnectionHandler.closeConnection(connection);
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 }

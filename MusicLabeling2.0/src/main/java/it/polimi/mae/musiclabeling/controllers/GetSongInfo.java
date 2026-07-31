@@ -22,11 +22,6 @@ import java.sql.SQLException;
 @WebServlet("/GetSongInfo")
 public class GetSongInfo extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int songId;
@@ -43,8 +38,9 @@ public class GetSongInfo extends HttpServlet {
             return;
         }
 
-        SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
             if (!user.isAdmin() && !songsDAO.checkUserAccessToSong(user.getUserId(), songId)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().println("You do not have permission to access this song");
@@ -57,6 +53,8 @@ public class GetSongInfo extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while handling database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         Gson gson = new GsonBuilder().setDateFormat("yyyy MM dd").create();

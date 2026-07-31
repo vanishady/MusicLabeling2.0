@@ -18,11 +18,6 @@ import java.sql.SQLException;
 @WebServlet("/UploadSong")
 public class UploadSong extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -87,8 +82,9 @@ public class UploadSong extends HttpServlet {
         }
 
         // Now save songName, artist, and savePath to your database
-        SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
             songsDAO.addSongToUser(userId, songName, artist, fileName);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -99,17 +95,11 @@ public class UploadSong extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("DB error while uploading song.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         response.getWriter().write("Song uploaded successfully!");
-    }
-
-    public void destroy() {
-        try {
-            ConnectionHandler.closeConnection(connection);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }
 

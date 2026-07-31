@@ -26,11 +26,6 @@ import java.util.stream.Collectors;
 @WebServlet("/AddLabelToSong")
 public class AddLabelToSong extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int songId, labelId, labelTiming;
@@ -68,10 +63,11 @@ public class AddLabelToSong extends HttpServlet {
 
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
-        LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
-        SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
-
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
+            SongsDAOImpl songsDAO = new SongsDAOImpl(connection);
+
             if (!user.isAdmin() && !songsDAO.checkUserAccessToSong(user.getUserId(), songId)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().println("You do not have permission to add label to this song");
@@ -99,16 +95,10 @@ public class AddLabelToSong extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while handling database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    public void destroy() {
-        try {
-            ConnectionHandler.closeConnection(connection);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }

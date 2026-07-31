@@ -25,25 +25,23 @@ import java.util.List;
 @WebServlet("/GetAllLabels")
 public class GetAllLabels extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         List<Label> labels;
 
-        LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
             labels = labelsDAO.getAllLabels();
         } catch (SQLException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while retrieving songs from database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         Gson gson = new GsonBuilder().setDateFormat("yyyy MM dd").create();

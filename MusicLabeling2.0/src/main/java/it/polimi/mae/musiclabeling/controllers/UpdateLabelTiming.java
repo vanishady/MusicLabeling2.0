@@ -22,11 +22,6 @@ import java.util.List;
 @WebServlet("/UpdateLabelTiming")
 public class UpdateLabelTiming extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int userSongLabelId, newTimingMs;
@@ -48,6 +43,7 @@ public class UpdateLabelTiming extends HttpServlet {
 
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         LabelsDAOImpl labelsDAO = new LabelsDAOImpl(connection);
         ProjectConstants constants = ProjectConstants.getProjectConstants();
 
@@ -103,16 +99,10 @@ public class UpdateLabelTiming extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while handling database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    public void destroy() {
-        try {
-            ConnectionHandler.closeConnection(connection);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }

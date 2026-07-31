@@ -25,24 +25,22 @@ import java.util.List;
 @WebServlet("/GetAllUsers")
 public class GetAllUsers extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         List<User> users;
 
-        UsersDAOImpl usersDAO = new UsersDAOImpl(connection);
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         try {
+            UsersDAOImpl usersDAO = new UsersDAOImpl(connection);
             users = usersDAO.getUsers(user.getUserId());
         } catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while retrieving users from database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         if (users == null || users.isEmpty()) {

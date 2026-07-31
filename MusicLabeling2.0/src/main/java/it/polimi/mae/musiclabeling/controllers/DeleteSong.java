@@ -23,11 +23,6 @@ import it.polimi.mae.musiclabeling.dao.SongsDAOImpl;
 @WebServlet("/DeleteSong")
 public class DeleteSong extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Connection connection = null;
-
-    public void init() throws ServletException {
-        connection = ConnectionHandler.getConnection(getServletContext());
-    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int songId;
@@ -56,17 +51,20 @@ public class DeleteSong extends HttpServlet {
             return;
         }
 
+        Connection connection = ConnectionHandler.getConnection(getServletContext());
         SongsDAOImpl songsDao = new SongsDAOImpl(connection);
         Song song;
         try {
             song = songsDao.getSong(songId);
         } catch (SQLException e) {
+            ConnectionHandler.closeConnection(connection);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while handling database.");
             return;
         }
 
         if (song == null) {
+            ConnectionHandler.closeConnection(connection);
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().println("Song not found.");
             return;
@@ -84,11 +82,13 @@ public class DeleteSong extends HttpServlet {
             // Attempt to delete the file
             boolean deleted = audioFile.delete();
             if (!deleted) {
+                ConnectionHandler.closeConnection(connection);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.getWriter().println("Can't delete the audio file.");
                 return;
             }
         } else {
+            ConnectionHandler.closeConnection(connection);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("File not found.");
             return;
@@ -102,16 +102,10 @@ public class DeleteSong extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("Error while handling database.");
             return;
+        } finally {
+            ConnectionHandler.closeConnection(connection);
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    public void destroy() {
-        try {
-            ConnectionHandler.closeConnection(connection);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }
