@@ -68,18 +68,22 @@ public class UploadSong extends HttpServlet {
         String extension = contentType.equals("audio/mpeg") ? ".mp3" : ".wav";
         String fileName = java.util.UUID.randomUUID() + extension;
         String storageDir = System.getenv("AUDIO_STORAGE_PATH");
+        if (storageDir == null || storageDir.isBlank()) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("AUDIO_STORAGE_PATH environment variable is not set.");
+            return;
+        }
         String savePath = storageDir + File.separator + fileName;
-
-        // Ensure storage directory exists
-        Files.createDirectories(Paths.get(storageDir));
 
         // Save the file using stream copy (more reliable across different filesystems)
         try (java.io.InputStream in = songFilePart.getInputStream()) {
+            Files.createDirectories(Paths.get(storageDir));
             Files.copy(in, Paths.get(savePath));
         } catch (IOException e) {
+            e.printStackTrace();
             Files.deleteIfExists(Paths.get(savePath));
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Unable to upload file on server.");
+            response.getWriter().write("Unable to upload file on server. Cause: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return;
         }
 
