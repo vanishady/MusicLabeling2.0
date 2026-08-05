@@ -26,41 +26,46 @@ public class SongsDAOImpl implements SongsDAO{
 
     @Override
     public void addSongToUser(int userId, String songName, String artist, String filePath) throws SQLException {
-        String insertSong = "INSERT INTO Songs (song_name, artist, file_path) VALUES (?, ?, ?)";
+        String insertSong = "INSERT INTO songs (song_name, artist, file_path) VALUES (?, ?, ?)";
         String linkSongToUser = "INSERT INTO user_songs (user_id, song_id) VALUES (?, ?)";
         PreparedStatement stmtSong = null;
         PreparedStatement stmtLink = null;
         ResultSet generatedKeys = null;
         Integer songId = null;
 
-        connection.setAutoCommit(false); // Start transaction
+        connection.setAutoCommit(false);
+        try {
+            // Insert the new song
+            stmtSong = connection.prepareStatement(insertSong, Statement.RETURN_GENERATED_KEYS);
+            stmtSong.setString(1, songName);
+            stmtSong.setString(2, artist);
+            stmtSong.setString(3, filePath);
+            int affectedRows = stmtSong.executeUpdate();
 
-        // Insert the new song
-        stmtSong = connection.prepareStatement(insertSong, Statement.RETURN_GENERATED_KEYS);
-        stmtSong.setString(1, songName);
-        stmtSong.setString(2, artist);
-        stmtSong.setString(3, filePath);
-        int affectedRows = stmtSong.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating song failed, no rows affected.");
+            }
 
-        if (affectedRows == 0) {
-            throw new SQLException("Creating song failed, no rows affected.");
+            generatedKeys = stmtSong.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                songId = generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Creating song failed, no ID obtained.");
+            }
+
+            // Link the song to the user
+            stmtLink = connection.prepareStatement(linkSongToUser);
+            stmtLink.setInt(1, userId);
+            stmtLink.setInt(2, songId);
+            stmtLink.executeUpdate();
+
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.setAutoCommit(true);
         }
-
-        generatedKeys = stmtSong.getGeneratedKeys();
-        if (generatedKeys.next()) {
-            songId = generatedKeys.getInt(1);
-        } else {
-            throw new SQLException("Creating song failed, no ID obtained.");
-        }
-
-        // Link the song to the user
-        stmtLink = connection.prepareStatement(linkSongToUser);
-        stmtLink.setInt(1, userId);
-        stmtLink.setInt(2, songId);
-        stmtLink.executeUpdate();
-
-        connection.commit(); // Commit transaction
-        connection.setAutoCommit(true);
     }
 
     @Override

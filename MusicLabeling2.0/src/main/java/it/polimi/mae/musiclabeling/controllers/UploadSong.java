@@ -96,7 +96,7 @@ public class UploadSong extends HttpServlet {
             e.printStackTrace();
             Files.deleteIfExists(Paths.get(savePath));
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().println("DB error while uploading song.");
+            response.getWriter().println("DB error while uploading song. Cause: " + e.getMessage());
             return;
         } finally {
             ConnectionHandler.closeConnection(connection);
