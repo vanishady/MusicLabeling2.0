@@ -9,6 +9,8 @@ import jakarta.servlet.http.*;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -65,19 +67,19 @@ public class UploadSong extends HttpServlet {
         // Generate a unique file name (considering file extension)
         String extension = contentType.equals("audio/mpeg") ? ".mp3" : ".wav";
         String fileName = java.util.UUID.randomUUID() + extension;
-        String savePath = System.getenv("AUDIO_STORAGE_PATH") + File.separator + fileName;
+        String storageDir = System.getenv("AUDIO_STORAGE_PATH");
+        String savePath = storageDir + File.separator + fileName;
 
-        // Save the file
-        try {
-            songFilePart.write(savePath);
+        // Ensure storage directory exists
+        Files.createDirectories(Paths.get(storageDir));
+
+        // Save the file using stream copy (more reliable across different filesystems)
+        try (java.io.InputStream in = songFilePart.getInputStream()) {
+            Files.copy(in, Paths.get(savePath));
         } catch (IOException e) {
-            File file = new File(savePath);
-            if (file.exists()) {
-                file.delete();
-            }
+            Files.deleteIfExists(Paths.get(savePath));
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Unable to upload file on server.");
-            response.getWriter().write(savePath);
             return;
         }
 
@@ -88,10 +90,7 @@ public class UploadSong extends HttpServlet {
             songsDAO.addSongToUser(userId, songName, artist, fileName);
         } catch (SQLException e) {
             e.printStackTrace();
-            File file = new File(savePath);
-            if (file.exists()) {
-                file.delete();
-            }
+            Files.deleteIfExists(Paths.get(savePath));
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().println("DB error while uploading song.");
             return;
